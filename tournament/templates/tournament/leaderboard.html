@@ -1,0 +1,71 @@
+<!-- tournament/templates/tournament/leaderboard.html -->
+{% extends "base_full.html" %}
+
+{% block main %}
+    <main>
+        <div class="leaderboard">
+            <table class="leaderboard__table" id="leaderboard">
+                <caption class="leaderboard__title">Дилемма заключённого</caption>
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Команда</th>
+                    <th>Очки</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Организаторы</td>
+                    <td>25</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Организаторы 2</td>
+                    <td>23</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Организаторы</td>
+                    <td>25</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Организаторы 2</td>
+                    <td>23</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+{% endblock %}
+
+{% block script %}
+    <script>
+        const ws = new WebSocket('ws://' + window.location.host + '/ws/leaderboard/');
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            const tbody = document.querySelector('#leaderboard tbody');
+
+            tbody.classList.add('fade-effect');
+
+            tbody.innerHTML = '';
+
+            for (const [place, team] of data.entries()) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${place + 1}</td>
+                    <td>${team.name}</td>
+                    <td>${team.score}</td>
+                `;
+                tbody.appendChild(row);
+            }
+
+            setTimeout(() => {
+                tbody.classList.remove('fade-effect');
+            }, 1000); // 1s
+        };
+    </script>
+{% endblock %}
+

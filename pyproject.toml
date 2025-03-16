@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "bct-web"
+version = "0.1.0"
+description = ""
+authors = ["zhikh <zhikh.k@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^5.1.7"
+channels = "^3.0.4"
+asgiref = "^3.8.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

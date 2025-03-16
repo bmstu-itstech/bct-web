@@ -1,0 +1,24 @@
+<!-- authentication/templates/authentication/login.html -->
+{% extends "base.html" %}
+
+{% block header %}
+    <h1 class="header__title">Bauman Code Tournament</h1>
+{% endblock %}
+
+{% block main %}
+    <main>
+        <div class="wrapper">
+            <div class="card">
+                <h2 class="card__header">Войти</h2>
+                <form class="card__form" method="post">
+                    {% csrf_token %}
+                    <label for="id_username" style="display: none"></label>
+                    <input id="id_username" class="card__input" type="text" name="username" placeholder="Название команды или фамилия" required>
+                    <label for="id_password" style="display: none"></label>
+                    <input id="id_password" class="card__input" type="password" name="password" placeholder="Пароль от организаторов" required>
+                    <button class="card__submit" type="submit">Войти</button>
+                </form>
+            </div>
+        </div>
+    </main>
+{% endblock %}
