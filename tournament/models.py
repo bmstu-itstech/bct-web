@@ -1,3 +1,7 @@
+import subprocess
+import sys
+from itertools import combinations
+
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 
@@ -17,7 +21,11 @@ class Team(models.Model):
     )
 
     def last_program(self, game_id):
-        return self.programs.filter(id=game_id).order_by('uploaded_at').last()
+        game = Game.objects.get(id=game_id)
+        return (self.programs
+                .filter(game=game)
+                .order_by('uploaded_at')
+                .last())
 
     def score(self, game_id):
         program = self.last_program(game_id)
@@ -26,10 +34,11 @@ class Team(models.Model):
         tour = Tour.last_tour(game_id)
         if tour is None:
             return 0
-        return Result.objects.filter(
+        res = Result.objects.filter(
             program=program,
             round__tour=tour,
-        ).aggregate(Sum('score'))['score__sum']
+        ).aggregate(Sum('score', default=-1))['score__sum']
+        return res
 
     def __str__(self):
         return self.user.username
@@ -79,7 +88,8 @@ class Tour(models.Model):
 
     @classmethod
     def last_tour(cls, game_id):
-        return cls.objects.filter(id=game_id).order_by('played_at').last()
+        game = Game.objects.get(id=game_id)
+        return cls.objects.filter(game=game).order_by('played_at').last()
 
     def __str__(self):
         return f'{self.game.name}: {self.played_at}'
@@ -165,9 +175,35 @@ def send_update(sender, instance, **kwargs):
     channel_layer = get_channel_layer()
     results = fetch_team_results_sync(instance.program.game.id)
     async_to_sync(channel_layer.group_send)(
-        "results_updates",
+        'results_updates',
         {
-            "type": "send_results_update",
-            "results": results,
+            'type': 'send_results_update',
+            'results': results,
         },
     )
+
+
+JUDGE = './bct-judge'
+
+@receiver(post_save, sender=Program)
+@receiver(post_delete, sender=Program)
+def play(sender, instance, **kwargs):
+    game = instance.game
+    teams = list(Team.objects.all())
+    programs = []
+    for team in teams:
+        program = team.last_program(game.id)
+        if program:
+            programs.append(program)
+
+    tour = Tour.objects.create(game=game)
+
+    for pl, pr in combinations(programs, 2):
+        rnd = Round.objects.create(tour=tour, left=pl, right=pr)
+        r = subprocess.run(args=[JUDGE, 'dilemma', pl.file.path, pr.file.path], capture_output=True, text=True)
+        if r.returncode != 0:
+            print(r.stderr, file=sys.stderr)
+        else:
+            left_score, right_score = map(int, r.stdout.split())
+            Result.objects.create(round=rnd, program=pl, score=left_score)
+            Result.objects.create(round=rnd, program=pr, score=right_score)
