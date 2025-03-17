@@ -1,4 +1,4 @@
-from asgiref.sync import async_to_sync
+from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from django.db import models
 from django.db.models import Q, Sum
@@ -134,13 +134,26 @@ class Result(models.Model):
         return f'{self.program}: {self.score}'
 
 
+def fetch_team_results_sync():
+    teams = list(Team.objects.all())
+    results = [
+        {
+            "name": team.name,
+            "score": team.score(),
+        }
+        for team in teams
+    ]
+    results.sort(key=lambda team: team["score"], reverse=True)
+    return results
+
+fetch_team_results_async = sync_to_async(fetch_team_results_sync)
+
+
 @receiver(post_save, sender=Team)
 @receiver(post_delete, sender=Team)
 def send_update(sender, instance, **kwargs):
     channel_layer = get_channel_layer()
-    teams = list(Team.objects.all())
-    teams.sort(key=lambda t: t.score())
-    results = [{'name': team.name, 'score': team.score} for team in teams]
+    results = fetch_team_results_sync()
     async_to_sync(channel_layer.group_send)(
         'results_updates',
         {
