@@ -18,6 +18,7 @@ header {
     width: 100%;
     background-color: white;
     border-bottom: 1px solid #cdcdcd;
+    font-size: 18px;
 }
 
 .flex {
@@ -35,7 +36,7 @@ header {
 
 
 .wrapper {
-    width: 1200px;
+    width: 70vw;
     display: flex;
     justify-content: center;
 }
@@ -47,6 +48,9 @@ header {
 .header__item {
     height: 100%;
     display: flex;
+    align-items: center;
+    margin-left: 1rem;
+    margin-right: 1rem;
 }
 
 .header__item_left {
@@ -60,20 +64,39 @@ header {
     color: #333333;
 }
 
+.header__button {
+    font-size: 18px;
+    color: #333333;
+    height: 2.5em;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    border-radius: 0.25rem;
 
-.header_button {
-    height: 100%;
-    font-size: 24px;
-    color: white;
-    padding: 0.5em;
     align-content: center;
     transition-duration: .15s;
 }
 
-.header_button:hover {
+.header__button:hover {
     background-color: white;
-    color: black;
+    color: #1A1A1A;
 }
+
+.header__button_black {
+    color: white;
+    background-color: #1A1A1A;
+}
+
+.header__button_black:hover {
+    background-color: #696969;
+    color: white;
+}
+
+.header__icon {
+    width: 20px;
+    height: 20px;
+}
+
+
 
 main {
     flex: 1;
