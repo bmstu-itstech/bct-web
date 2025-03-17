@@ -5,7 +5,11 @@ from tournament import models
 
 
 class LeaderboardConsumer(AsyncWebsocketConsumer):
+
+    game_name: str
+
     async def connect(self):
+        self.game_name = self.scope['url_route']['kwargs']['game']
         await self.channel_layer.group_add("results_updates", self.channel_name)
         await self.accept()
         await self.send_results()
@@ -14,7 +18,7 @@ class LeaderboardConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard("results_updates", self.channel_name)
 
     async def send_results(self):
-        results = await models.fetch_team_results_async()
+        results = await models.fetch_team_results_async(self.game_name)
         await self.send(text_data=json.dumps(results))
 
     async def send_results_update(self, event):

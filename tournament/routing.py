@@ -4,5 +4,5 @@ from tournament import consumers
 
 
 websocket_urlpatterns = [
-    path('ws/leaderboard/', consumers.LeaderboardConsumer.as_asgi()),
+    path('ws/leaderboard/<game>/', consumers.LeaderboardConsumer.as_asgi()),
 ]

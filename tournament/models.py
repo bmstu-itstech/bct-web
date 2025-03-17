@@ -1,10 +1,11 @@
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
+from django.dispatch import receiver, Signal
 
 
 class Team(models.Model):
@@ -15,14 +16,14 @@ class Team(models.Model):
         related_query_name='team'
     )
 
-    def last_program(self):
-        return self.programs.order_by('uploaded_at').last()
+    def last_program(self, game_id):
+        return self.programs.filter(id=game_id).order_by('uploaded_at').last()
 
-    def score(self):
-        program = self.last_program()
+    def score(self, game_id):
+        program = self.last_program(game_id)
         if program is None:
             return 0
-        tour = Tour.last_tour()
+        tour = Tour.last_tour(game_id)
         if tour is None:
             return 0
         return Result.objects.filter(
@@ -35,6 +36,11 @@ class Team(models.Model):
 
 
 class Program(models.Model):
+    game = models.ForeignKey(
+        'Game',
+        on_delete=models.CASCADE,
+        related_name='programs',
+    )
     team = models.ForeignKey(
         Team,
         on_delete=models.CASCADE,
@@ -72,11 +78,11 @@ class Tour(models.Model):
     )
 
     @classmethod
-    def last_tour(cls):
-        return cls.objects.order_by('played_at').last()
+    def last_tour(cls, game_id):
+        return cls.objects.filter(id=game_id).order_by('played_at').last()
 
     def __str__(self):
-        return '{}: {}' % self.game.id, self.game.name
+        return f'{self.game.name}: {self.played_at}'
 
 
 class Round(models.Model):
@@ -100,14 +106,14 @@ class Round(models.Model):
     )
 
     @classmethod
-    def last_rounds(cls, program_id):
-        last_tour = Tour.last_tour()
+    def last_rounds(cls, game_id, program):
+        last_tour = Tour.last_tour(game_id)
         if last_tour is None:
             return None
         return (
             last_tour
                 .rounds
-                .filter(Q(left_id=program_id) | Q(right_id=program_id))
+                .filter(Q(left=program) | Q(right=program))
         )
 
     def __str__(self):
@@ -127,7 +133,7 @@ class Result(models.Model):
     )
     score = models.IntegerField()
     error = models.CharField(
-        null=True,
+        blank=True,
         max_length=255,
     )
 
@@ -137,30 +143,31 @@ class Result(models.Model):
         return f'{self.program}: {self.score}'
 
 
-def fetch_team_results_sync():
+def fetch_team_results_sync(game_id):
     teams = list(Team.objects.all())
     results = [
         {
-            "name": team.user.username,
-            "score": team.score(),
+            'name': team.user.username,
+            'score': team.score(game_id),
         }
         for team in teams
     ]
-    results.sort(key=lambda team: team["score"], reverse=True)
+    results.sort(key=lambda team: team['score'], reverse=True)
     return results
+
 
 fetch_team_results_async = sync_to_async(fetch_team_results_sync)
 
 
-@receiver(post_save, sender=Team)
-@receiver(post_delete, sender=Team)
+@receiver(post_save, sender=Result)
+@receiver(post_delete, sender=Result)
 def send_update(sender, instance, **kwargs):
     channel_layer = get_channel_layer()
-    results = fetch_team_results_sync()
+    results = fetch_team_results_sync(instance.program.game.id)
     async_to_sync(channel_layer.group_send)(
-        'results_updates',
+        "results_updates",
         {
-            'type': 'send_results_update',
-            'results': results,
+            "type": "send_results_update",
+            "results": results,
         },
     )
