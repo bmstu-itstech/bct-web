@@ -1,5 +1,6 @@
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.db import models
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save, post_delete
@@ -7,9 +8,11 @@ from django.dispatch import receiver
 
 
 class Team(models.Model):
-    name = models.CharField(
-        max_length=255,
-        unique=True
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='team',
+        related_query_name='team'
     )
 
     def last_program(self):
@@ -28,7 +31,7 @@ class Team(models.Model):
         ).aggregate(Sum('score'))['score__sum']
 
     def __str__(self):
-        return self.name
+        return self.user.username
 
 
 class Program(models.Model):
@@ -138,7 +141,7 @@ def fetch_team_results_sync():
     teams = list(Team.objects.all())
     results = [
         {
-            "name": team.name,
+            "name": team.user.username,
             "score": team.score(),
         }
         for team in teams

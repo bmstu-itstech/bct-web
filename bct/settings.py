@@ -76,6 +76,8 @@ TEMPLATES = [
 
 ASGI_APPLICATION = 'bct.asgi.application'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
