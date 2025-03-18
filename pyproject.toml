@@ -10,6 +10,8 @@ python = "^3.12"
 django = "^5.1.7"
 channels = "^3.0.4"
 asgiref = "^3.8.1"
+markdown = "^3.7"
+pygments = "^2.19.1"
 
 
 [build-system]

@@ -15,9 +15,12 @@ header, main, footer {
 
 header {
     width: 100%;
-    background-color: white;
     border-bottom: 1px solid #cdcdcd;
     font-size: 18px;
+}
+
+header.subheader {
+    background-color: #F9F9FB;
 }
 
 .flex {
@@ -37,24 +40,33 @@ header {
     background-color: #f9f9fa;
 }
 
-
-
 .wrapper {
     width: 70vw;
     display: flex;
-    justify-content: center;
+    justify-content: start;
+    flex-wrap: wrap;
 }
 
 .wrapper_reverse {
-    justify-items: flex-end;
+    justify-content: flex-end;
 }
 
+.wrapper_center {
+    justify-content: center;
+}
+
+.icon {
+    height: 1em;
+}
+
+
 .header__item {
-    height: 100%;
     display: flex;
     align-items: center;
-    margin-left: 1rem;
-    margin-right: 1rem;
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    white-space: nowrap;
+    padding: 0.5em;
 }
 
 .header__item_left {
@@ -64,7 +76,6 @@ header {
 .header__title {
     font-size: 32px;
     font-weight: bold;
-    padding: 0.5em;
     color: #333333;
 }
 
@@ -100,6 +111,23 @@ header {
     height: 20px;
 }
 
+@media (max-width: 800px) {
+    .header__button *:not(.header__icon) {
+        display: none;
+    }
+}
+
+.header__subtitle {
+    color: #1A1A1A;
+}
+
+.header__subtitle:hover {
+    text-decoration: underline;
+}
+
+.header__subtitle_highlight {
+    font-weight: bold;
+}
 
 
 main {
@@ -164,11 +192,13 @@ main {
 
 .leaderboard {
     background-color: white;
-    padding: 1rem;
+    padding: 1rem 2rem;
     display: flex;
     flex-direction: column;
     justify-content: start;
     align-items: center;
+    max-width: 800px;
+    width: 100%;
 }
 
 .leaderboard__title {
@@ -177,9 +207,32 @@ main {
     font-weight: bold;
 }
 
+.leaderboard__header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.leaderboard__rules {
+    font-size: 20px;
+    color: #1A1A1A;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+.leaderboard__rules:hover {
+    text-decoration: underline;
+}
+
+.leaderboard__icon {
+    height: 1em;
+    margin-right: 5px;
+}
+
 .leaderboard__table {
     font-size: 20px;
-    width: 800px;
+    width: 100%;
     border-collapse:collapse
 }
 
@@ -236,7 +289,6 @@ main {
 
 
 .upload__form {
-    width: 100%;
     margin: 24px 0;
     display: flex;
     align-items: center;
@@ -256,6 +308,11 @@ main {
 
 .upload__file-button:hover {
     background: #0250BB;
+}
+
+.upload__label {
+    display: flex;
+    align-items: center;
 }
 
 .upload__file-input {
@@ -280,6 +337,70 @@ main {
 
 
 
+.markdown {
+    width: 100%;
+    max-width: 800px;
+    padding: 1rem;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5 {
+    font-weight: bold;
+    padding: 0.8em 0;
+}
+
+.markdown h1 {
+    font-size: 32px;
+}
+
+.markdown h2 {
+    font-size: 28px;
+}
+
+.markdown h3 {
+    font-size: 24px;
+}
+
+.markdown h4 {
+    font-size: 20px;
+}
+
+.markdown h5 {
+    font-size: 20px;
+}
+
+.markdown ol {
+    padding-left: 2.5rem;
+}
+
+.markdown li {
+    margin-bottom: 0.5em;
+}
+
+.markdown .codehilite {
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.markdown p,
+.markdown code {
+    font-size: 16px;
+}
+
+.markdown p code {
+    padding: .2em .4em;
+    font-size: 80%;
+    margin: 0;
+    background-color: #eff1f3;
+    color: #383a42;
+    border-radius: 6px;
+}
+
+
+
 footer {
     width: 100%;
     background-color: #3f3f3f;
@@ -289,6 +410,10 @@ footer {
 footer p {
     padding: 0.5em;
     font-size: 18px;
+    color: white;
+}
+
+footer a {
     color: white;
 }
 

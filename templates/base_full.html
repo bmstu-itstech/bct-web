@@ -3,40 +3,59 @@
 {% extends "base.html" %}
 {% load static %}
 {% block header %}
-<header>
-    <ul class="wrapper wrapper_reverse">
-        <li class="header__item header__item_left">
-            <h1 class="header__title">Bauman Code Tournament</h1>
-        </li>
-        {% if user.is_authenticated %}
-            <li class="header__item">
-                <p>
-                    <img src="{% static 'images/user-icon.svg' %}" alt="" class="header__icon">
-                    {{ user }}
-                </p>
+    <header>
+        <ul class="wrapper wrapper_reverse">
+            <li class="header__item header__item_left">
+                <h1 class="header__title">Bauman Code Tournament</h1>
             </li>
-            <li class="header__item">
-                <form method="post" action="{% url 'logout' %}">
-                    {% csrf_token %}
-                    <button class="header__button header__button_black" type="submit">
-                        <img src="{% static 'images/logout-icon-white.svg' %}" alt="" class="header__icon">
-                        Выйти
-                    </button>
-                </form>
-            </li>
-        {% else %}
-            <li class="header__item">
-                <a class="header__button header__button_black" href="{% url 'login' %}">Войти</a>
-            </li>
-        {% endif %}
-    </ul>
-</header>
+            {% if user.is_authenticated %}
+                <li class="header__item">
+                    <p>
+                        <img src="{% static 'images/user-icon.svg' %}" alt="" class="header__icon">
+                        {{ user }}
+                    </p>
+                </li>
+                <li class="header__item">
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button class="header__button header__button_black" type="submit">
+                            <img src="{% static 'images/logout-icon-white.svg' %}" alt="" class="header__icon">
+                            Выйти
+                        </button>
+                    </form>
+                </li>
+            {% else %}
+                <li class="header__item">
+                    <a class="header__button header__button_black" href="{% url 'login' %}">Войти</a>
+                </li>
+            {% endif %}
+        </ul>
+    </header>
+    <header class="subheader">
+        <ul class="wrapper">
+            {% for game in games %}
+                <li class="header__item">
+                    {% if game.id == current_game.id %}
+                        <a href="/games/{{ game.id }}/" class="header__subtitle header__subtitle_highlight">{{ game.name }}</a>
+                    {% else %}
+                        <a href="/games/{{ game.id }}/" class="header__subtitle">{{ game.name }}</a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </header>
 {% endblock %}
 
 {% block footer %}
 <footer>
-    <div class="wrapper">
-        <p>&copy; 2025 Developed by <a href="https://github.com/bmstu-itstech">ITS Tech</a></p>
+    <div class="wrapper wrapper_center">
+        <p>
+            &copy; 2025 Developed by
+            <a href="https://github.com/bmstu-itstech">
+                ITS Tech
+                <img src="{% static 'images/external-icon.svg' %}" alt="" class="icon">
+            </a>
+        </p>
     </div>
 </footer>
 {% endblock %}

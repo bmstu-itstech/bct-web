@@ -1,22 +1,29 @@
 <!-- tournament/templates/tournament/leaderboard.html -->
 {% extends "base_full.html" %}
+{% load static %}
 
 {% block main %}
     <main>
         <div class="leaderboard">
-            <h2 class="leaderboard__title">{{ game.name }}</h2>
-            <form method="post" action="{% url 'upload' game.id %}" class="upload__form" id="upload-program-form" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="upload__file-button">
-                    <label class="upload__label" for="file-upload">Загрузить .py</label>
-                    <input class="upload__file-input" type="file" id="file-upload" name="file" accept=".py" onchange="handleFileUpload()"/>
-                </div>
-                {% if program_name %}
-                    <div class="upload__preview">
-                        Загружено: <a href="{{ program_url }}" class="upload__preview-link">{{ program_name }}</a>
+            <h2 class="leaderboard__title">{{ current_game.name }}</h2>
+            <div class="leaderboard__header">
+                <form method="post" action="{% url 'upload' current_game.id %}" class="upload__form" id="upload-program-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="upload__file-button" title="Можно загрузить только программы на языке программирования Python3">
+                        <label class="upload__label" for="file-upload">Загрузить .py</label>
+                        <input class="upload__file-input" type="file" id="file-upload" name="file" accept=".py" onchange="handleFileUpload()"/>
                     </div>
-                {% endif %}
-            </form>
+                    {% if program_name %}
+                        <div class="upload__preview" title="Последняя загруженная программа">
+                            Загружено: <a href="{{ program_url }}" class="upload__preview-link">{{ program_name }}</a>
+                        </div>
+                    {% endif %}
+                </form>
+                <a href="rules" class="leaderboard__rules">
+                    <img src="{% static 'images/book-icon.svg' %}" alt="" class="leaderboard__icon">
+                    Правила
+                </a>
+            </div>
             <table class="leaderboard__table" id="leaderboard">
                 <thead>
                 <tr>
@@ -35,7 +42,7 @@
 
 {% block script %}
     <script>
-        const ws = new WebSocket('ws://' + window.location.host + '/ws/leaderboard/{{ game.id }}/');
+        const ws = new WebSocket('ws://' + window.location.host + '/ws/leaderboard/{{ current_game.id }}/');
 
         ws.onmessage = function(event) {
             const data = JSON.parse(event.data);

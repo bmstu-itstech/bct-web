@@ -71,6 +71,10 @@ class Game(models.Model):
         max_length=127,
         unique=True
     )
+    description = models.TextField(
+        blank=True,
+        default='',
+    )
 
     def __str__(self):
         return self.name

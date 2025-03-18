@@ -1,3 +1,4 @@
+import markdown
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponse
@@ -20,7 +21,8 @@ def leaderboard(request, game_id):
             request,
             'tournament/leaderboard.html',
             context={
-                        'game': game,
+                        'games': list(models.Game.objects.all()),
+                        'current_game': game,
                         'program_name': program.file.name.split('/')[-1],
                         'program_url': program.file.url,
                     }
@@ -29,7 +31,8 @@ def leaderboard(request, game_id):
         request,
         'tournament/leaderboard.html',
         context={
-                    'game': game,
+                    'games': list(models.Game.objects.all()),
+                    'current_game': game,
                 }
     )
 
@@ -48,6 +51,25 @@ def upload(request, game_id):
     program.save()
     return redirect(request.META.get('HTTP_REFERER'))
 
+
+def rules(request, game_id):
+    game = models.Game.objects.get(id=game_id)
+    html_content = markdown.markdown(
+        game.description,
+        extensions=[
+            'markdown.extensions.codehilite',
+            'markdown.extensions.fenced_code',
+        ]
+    )
+    return render(
+        request,
+        'tournament/rules.html',
+        context={
+                    'content': html_content,
+                    'games': list(models.Game.objects.all()),
+                    'current_game': game,
+                }
+    )
 
 def home(request):
     return redirect('games/1/')
