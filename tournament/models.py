@@ -230,6 +230,7 @@ def send_update(sender, instance, **kwargs):
         'results_updates',
         {
             'type': 'send_results_update',
+            'game': instance.program.game_id,
             'results': results,
         },
     )

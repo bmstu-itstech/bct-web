@@ -75,5 +75,10 @@ def rules(request, game_id):
     )
 
 def home(request):
-    first_game = models.Game.objects.first()
-    return redirect(f'games/{first_game.id}/')
+    return render(
+        request,
+        'tournament/homepage.html',
+        context={
+            'games': list(models.Game.objects.all()),
+        }
+    )

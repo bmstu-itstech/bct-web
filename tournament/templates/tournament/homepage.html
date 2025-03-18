@@ -1,0 +1,64 @@
+<!-- tournament/templates/tournament/homepage.html -->
+{% extends "base.html" %}
+{% load static %}
+
+{% block main %}
+    <main>
+        {% for game in games %}
+            <div class="leaderboard">
+                <table class="leaderboard__table" id="leaderboard-{{ game.tag }}">
+                    <caption class="leaderboard__title"><a class="header__subtitle" href="{% url 'leaderboard' game.id %}">{{ game.name }}</a></caption>
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Команда</th>
+                        <th>Очки</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Загружается по WebSockets -->
+                    </tbody>
+                </table>
+            </div>
+        {% endfor %}
+    </main>
+{% endblock %}
+
+{% block script %}
+    <script>
+        {% for game in games %}
+            const ws_{{ game.tag }} = new WebSocket('ws://' + window.location.host + '/ws/leaderboard/{{ game.id }}/');
+
+            ws_{{ game.tag }}.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const tbody = document.querySelector('#leaderboard-{{ game.tag }} tbody');
+
+                tbody.classList.add('fade-effect');
+
+                tbody.innerHTML = '';
+
+                for (const [place, team] of data.entries()) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td>${place + 1}</td>
+                    <td>${team.name}</td>
+                `;
+                    if (team.error === '') {
+                        row.innerHTML += `<td>${team.score}</td>`
+                    } else {
+                        row.innerHTML += `
+                    <td>
+                       <img src="{% static 'images/error-icon.svg' %}" alt="" class="leaderboard__error icon" title='${team.error}'>
+                    </td>
+                    `
+                    }
+                    tbody.appendChild(row);
+                }
+
+                setTimeout(() => {
+                    tbody.classList.remove('fade-effect');
+                }, 1000); // 1s
+            };
+        {% endfor %}
+    </script>
+{% endblock %}

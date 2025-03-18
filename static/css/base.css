@@ -122,7 +122,12 @@ header.subheader {
 }
 
 .header__subtitle:hover {
+    color: #1A1A1A;
     text-decoration: underline;
+}
+
+.header__subtitle:visited {
+    color: #1A1A1A;
 }
 
 .header__subtitle_highlight {
@@ -285,6 +290,10 @@ main {
 .leaderboard tr:nth-child(2) td:nth-child(1)::before,
 .leaderboard tr:nth-child(3) td:nth-child(1)::before {
     display: inline;
+}
+
+.leaderboard__error.icon {
+    font-size: 25px;
 }
 
 
