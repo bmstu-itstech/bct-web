@@ -6,12 +6,14 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 
 from tournament import models
-from tournament.models import Team
+from tournament.models import Team, Player
+
 
 @login_required(login_url='/auth/login')
 def leaderboard(request, game_id):
     user = User.objects.get(username=request.user.username)
-    team = Team.objects.get(user=user)
+    player = Player.objects.get(user=user)
+    team = player.team
     game = models.Game.objects.get(id=game_id)
     if not game:
         return HttpResponse('no game found', status=404)
@@ -45,7 +47,8 @@ def upload(request, game_id):
     if uploaded_file is None:
         return HttpResponse('expected file\n', status=400)
     user = User.objects.get(username=user.username)
-    team = Team.objects.get(user=user)
+    player = Player.objects.get(user=user)
+    team = player.team
     game = models.Game.objects.get(id=game_id)
     program = models.Program.objects.create(game=game, team=team, file=uploaded_file)
     program.save()
@@ -72,4 +75,5 @@ def rules(request, game_id):
     )
 
 def home(request):
-    return redirect('games/1/')
+    first_game = models.Game.objects.first()
+    return redirect(f'games/{first_game.id}/')

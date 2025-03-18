@@ -3,11 +3,20 @@ from django.contrib import admin
 from tournament import models
 
 
+@admin.register(models.Player)
+class PlayerAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'user',
+        'team',
+    ]
+
+
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = [
         'id',
-        'user',
+        'name',
     ]
 
 
@@ -26,6 +35,7 @@ class ProgramAdmin(admin.ModelAdmin):
 class GameAdmin(admin.ModelAdmin):
     list_display = [
         'id',
+        'tag',
         'name',
     ]
 

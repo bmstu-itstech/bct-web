@@ -7,7 +7,7 @@
         <div class="leaderboard">
             <h2 class="leaderboard__title">{{ current_game.name }}</h2>
             <div class="leaderboard__header">
-                <form method="post" action="{% url 'upload' current_game.id %}" class="upload__form" id="upload-program-form" enctype="multipart/form-data">
+                <form method="post" action="upload" class="upload__form" id="upload-program-form" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="upload__file-button" title="Можно загрузить только программы на языке программирования Python3">
                         <label class="upload__label" for="file-upload">Загрузить .py</label>
@@ -57,8 +57,16 @@
                 row.innerHTML = `
                     <td>${place + 1}</td>
                     <td>${team.name}</td>
-                    <td>${team.score}</td>
                 `;
+                if (team.error === '') {
+                    row.innerHTML += `<td>${team.score}</td>`
+                } else {
+                    row.innerHTML += `
+                    <td>
+                       <img src="{% static 'images/error-icon.svg' %}" alt="" class="leaderboard__error icon" title='${team.error}'>
+                    </td>
+                    `
+                }
                 tbody.appendChild(row);
             }
 

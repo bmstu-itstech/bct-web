@@ -1,23 +1,50 @@
+import logging
 import subprocess
-import sys
 from itertools import combinations
 
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 
 from django.conf import settings
+from django.conf.global_settings import AUTH_USER_MODEL
 from django.db import models
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver, Signal
+from django.dispatch import receiver
 
 
-class Team(models.Model):
+class Player(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='team',
-        related_query_name='team'
+        related_name='player'
+    )
+    team = models.ForeignKey(
+        'Team',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='members',
+    )
+
+    def __str__(self):
+        return self.user.username
+
+
+@receiver(post_save, sender=AUTH_USER_MODEL)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Player.objects.create(user=instance)
+
+@receiver(post_save, sender=AUTH_USER_MODEL)
+def save_user_profile(sender, instance, **kwargs):
+    instance.player.save()
+
+
+class Team(models.Model):
+    name = models.CharField(
+        max_length=127,
+        unique=True,
     )
 
     def last_program(self, game_id):
@@ -37,11 +64,26 @@ class Team(models.Model):
         res = Result.objects.filter(
             program=program,
             round__tour=tour,
-        ).aggregate(Sum('score', default=-1))['score__sum']
+        ).aggregate(Sum('score', default=0))['score__sum']
         return res
 
+    def error(self, game_id):
+        program = self.last_program(game_id)
+        if program is None:
+            return ''
+        tour = Tour.last_tour(game_id)
+        if tour is None:
+            return ''
+        res = Result.objects.filter(
+            program=program,
+            round__tour=tour,
+        ).last()
+        if res is None:
+            return ''
+        return res.error
+
     def __str__(self):
-        return self.user.username
+        return self.name
 
 
 class Program(models.Model):
@@ -69,7 +111,11 @@ class Program(models.Model):
 class Game(models.Model):
     name = models.CharField(
         max_length=127,
-        unique=True
+        unique=True,
+    )
+    tag = models.CharField(
+        max_length=127,
+        unique=True,
     )
     description = models.TextField(
         blank=True,
@@ -77,7 +123,7 @@ class Game(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return self.tag
 
 
 class Tour(models.Model):
@@ -161,12 +207,14 @@ def fetch_team_results_sync(game_id):
     teams = list(Team.objects.all())
     results = [
         {
-            'name': team.user.username,
+            'name': team.name,
             'score': team.score(game_id),
+            'error': team.error(game_id),
         }
         for team in teams
     ]
-    results.sort(key=lambda team: team['score'], reverse=True)
+    # Сортировка таким образом, что ошибки будут внизу таблицы
+    results.sort(key=lambda team: -1 if team['error'] else team['score'], reverse=True)
     return results
 
 
@@ -204,10 +252,17 @@ def play(sender, instance, **kwargs):
 
     for pl, pr in combinations(programs, 2):
         rnd = Round.objects.create(tour=tour, left=pl, right=pr)
-        r = subprocess.run(args=[JUDGE, 'dilemma', pl.file.path, pr.file.path], capture_output=True, text=True)
-        if r.returncode != 0:
-            print(r.stderr, file=sys.stderr)
-        else:
+        r = subprocess.run(args=[JUDGE, game.tag, pl.file.path, pr.file.path], capture_output=True, text=True)
+        if r.returncode == 0:
             left_score, right_score = map(int, r.stdout.split())
             Result.objects.create(round=rnd, program=pl, score=left_score)
             Result.objects.create(round=rnd, program=pr, score=right_score)
+        elif r.returncode == 1:
+            Result.objects.create(round=rnd, program=pl, score=0, error=r.stderr)
+        elif r.returncode == 2:
+            Result.objects.create(round=rnd, program=pr, score=0, error=r.stderr)
+        else:
+            logging.error(r)
+            Result.objects.create(round=rnd, program=pl, score=0, error=r.stderr)
+            Result.objects.create(round=rnd, program=pr, score=0, error=r.stderr)
+
